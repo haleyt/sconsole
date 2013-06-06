@@ -129,6 +129,20 @@ static unsigned char valid[256];
 #define STATE_PREFIX  1
 #define STATE_COMMAND 2
 
+void usage(char *prog_name)
+{
+	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "%s [-t] [-l[<logfile>]] [-d <tty device>] [-b <baud rate>] [-h]\n", prog_name);
+	fprintf(stderr, "\t-t: transparent mode\n");
+	fprintf(stderr, "\t-l: log the output to <logfile>.  If <logfile> is not specified, the default log file name is \"console.log\"\n");
+	fprintf(stderr, "\t-d <tty device>: change to open <tty device> (the default is \"/dev/ttyUSB0\")\n");
+	fprintf(stderr, "\t-b <baud rate>: change to set baud rate as <baud rate> (the default is \"115200\")\n");
+	fprintf(stderr, "\t-h: this help page\n");
+	fprintf(stderr, "example: %s -lconsole.log -d /dev/ttyUSB0 -b 115200\n", prog_name);
+	fprintf(stderr, "\nNOTE: <ESC>-<ESC>-x to exit %s\n", prog_name);
+	fprintf(stderr, "\n");
+}
+
 int main(int argc, char *argv[])
 {
 	struct pollfd fds[2];
@@ -149,7 +163,7 @@ int main(int argc, char *argv[])
 	valid[10] = 1; /* newline */
 	valid[13] = 1; /* carriage return */
 
-	while ((ch = getopt(argc, argv, "tl::d:b:")) != -1) {
+	while ((ch = getopt(argc, argv, "tl::d:b:h")) != -1) {
 		switch (ch) {
 		case 't':
 			/* transparent mode */
@@ -173,6 +187,8 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			fprintf(stderr, "unknown option %s\n", argv[1]);
+		case 'h':
+			usage(argv[0]);
 			return 1;
 		}
 	}
