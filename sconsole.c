@@ -132,13 +132,14 @@ static unsigned char valid[256];
 int main(int argc, char *argv[])
 {
 	struct pollfd fds[2];
-	int speed = B115200;
-	const char *device = "/dev/ttyUSB0";
-	const char *logfile = "console.log";
+	int speed = B115200; /* default baud rate */
+	const char *device = "/dev/ttyUSB0"; /* the default tty device to open */
+	const char *logfile = "console.log"; /* the default log file name */
 	int fd, n;
 	int escape = 0;
 	int logfd = -1;
 	unsigned char ESC = 27;
+	int ch;
 
 	for (n = ' '; n < 127; n++)
 		valid[n] = 1;
@@ -148,8 +149,8 @@ int main(int argc, char *argv[])
 	valid[10] = 1; /* newline */
 	valid[13] = 1; /* carriage return */
 
-	while ((argc > 1) && (argv[1][0] == '-')) {
-		switch (argv[1][1]) {
+	while ((ch = getopt(argc, argv, "tl::d:b:")) != -1) {
+		switch (ch) {
 		case 't':
 			/* transparent mode */
 			for (n = 0; n < 256; n++)
@@ -157,29 +158,23 @@ int main(int argc, char *argv[])
 			break;
 		case 'l':
 			/* log */
-			if (argv[1][2])
-				logfile = &argv[1][2];
+			if (optarg) {
+				/* log file name is specified */
+				logfile = optarg;
+			}
 			logfd = open(logfile, O_CREAT | O_WRONLY, 0644);
+			break;
+		case 'd':
+			device = optarg;
+			break;
+		case 'b':
+			speed = text2speed(optarg);
+			fprintf(stderr, "SPEED: %s %08x\n", optarg, speed);
 			break;
 		default:
 			fprintf(stderr, "unknown option %s\n", argv[1]);
 			return 1;
 		}
-		argv++;
-		argc--;
-	}
-
-	if (argc > 1) {
-		device = argv[1];
-		argc--;
-		argv++;
-	}
-
-	if (argc > 1) {
-		speed = text2speed(argv[1]);
-		fprintf(stderr, "SPEED: %s %08x\n", argv[1], speed);
-		argc--;
-		argv++;
 	}
 
 	fd = openserial(device, speed);
